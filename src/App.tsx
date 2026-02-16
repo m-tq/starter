@@ -876,7 +876,9 @@ function App() {
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background">
           <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
             <div className="flex items-center gap-2 md:gap-3">
-              <Logo size={20} className="md:w-6 md:h-6" />
+              <div className="w-5 h-5 md:w-6 md:h-6">
+                <Logo size={24} />
+              </div>
               <h1 className="text-sm md:text-lg font-bold truncate" style={{ color: '#3A4DFF' }}>
                 <span className="hidden sm:inline">OctWa dApp Starter</span>
                 <span className="sm:hidden">OctWa</span>
