@@ -12,7 +12,8 @@ import {
   XCircle,
   Loader2,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { OctraSDK } from '@octwa/sdk';
 import type { Connection, Capability } from '@octwa/sdk';
@@ -873,64 +874,83 @@ function App() {
     <div className={darkMode ? 'dark' : ''}>
       <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-3">
-              <Logo size={24} />
-              <h1 className="text-lg font-bold" style={{ color: '#3A4DFF' }}>OctWa dApp Starter</h1>
+          <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Logo size={20} className="md:w-6 md:h-6" />
+              <h1 className="text-sm md:text-lg font-bold truncate" style={{ color: '#3A4DFF' }}>
+                <span className="hidden sm:inline">OctWa dApp Starter</span>
+                <span className="sm:hidden">OctWa</span>
+              </h1>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               {connection ? (
                 <>
                   <button
                     onClick={handleDisconnect}
                     disabled={loading === 'disconnect'}
-                    className="px-4 py-2 border border-input bg-background disabled:opacity-50 hover:opacity-80 transition-opacity flex items-center gap-2 text-sm"
+                    className="px-2 md:px-4 py-1.5 md:py-2 border border-input bg-background disabled:opacity-50 hover:opacity-80 transition-opacity flex items-center gap-1 md:gap-2 text-xs md:text-sm"
                   >
                     {loading === 'disconnect' ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                     ) : (
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-3 h-3 md:w-4 md:h-4" />
                     )}
-                    Disconnect
+                    <span className="hidden sm:inline">Disconnect</span>
                   </button>
-                  <div className="border-l border-dashed border-border h-6"></div>
+                  <div className="border-l border-dashed border-border h-4 md:h-6 hidden sm:block"></div>
                 </>
               ) : (
                 <>
                   <button
                     onClick={handleConnect}
                     disabled={!isInstalled || loading === 'connect'}
-                    className="px-4 py-2 bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2 text-sm"
+                    className="px-2 md:px-4 py-1.5 md:py-2 bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-1 md:gap-2 text-xs md:text-sm"
                   >
                     {loading === 'connect' ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                     ) : (
-                      <Wallet className="w-4 h-4" />
+                      <Wallet className="w-3 h-3 md:w-4 md:h-4" />
                     )}
-                    Connect Wallet
+                    <span className="hidden sm:inline">Connect</span>
                   </button>
-                  <div className="border-l border-dashed border-border h-6"></div>
+                  <div className="border-l border-dashed border-border h-4 md:h-6 hidden sm:block"></div>
                 </>
               )}
               
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 hover:[filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_0_8px_currentColor)] transition-all"
+                className="p-1.5 md:p-2 hover:[filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_0_8px_currentColor)] transition-all"
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5" /> : <Moon className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
             </div>
           </div>
         </header>
 
         <div className="flex flex-1 pt-16 pb-8 overflow-hidden">
-          <aside className={`fixed left-0 top-16 bottom-6 w-64 border-r border-border bg-background transition-transform overflow-y-auto overflow-x-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          {/* Mobile overlay */}
+          {sidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          
+          <aside className={`fixed left-0 top-16 bottom-6 w-64 border-r border-border bg-background transition-transform overflow-y-auto overflow-x-hidden z-50 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="absolute -right-8 top-4 px-2 py-3 border border-border bg-background hover:opacity-80 transition-opacity text-xs"
+              className="absolute -right-8 top-4 px-2 py-3 border border-border bg-background hover:opacity-80 transition-opacity text-xs hidden md:block"
             >
               {sidebarOpen ? '‹' : '›'}
+            </button>
+            
+            {/* Mobile close button */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="absolute right-2 top-2 p-2 hover:bg-muted rounded md:hidden"
+            >
+              <X className="w-4 h-4" />
             </button>
             
             <nav className="p-4 space-y-2">
@@ -955,9 +975,21 @@ function App() {
             </nav>
           </aside>
 
-          <main className={`flex-1 transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-            <div className="h-full px-8 py-8 overflow-y-auto">
-              <div className="max-w-4xl mx-auto space-y-6">
+          <main className={`flex-1 transition-all ${sidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="fixed bottom-4 right-4 p-3 bg-primary text-primary-foreground rounded-full shadow-lg md:hidden z-30"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            
+            <div className="h-full px-4 md:px-8 py-4 md:py-8 overflow-y-auto">
+              <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
               {activeSection === 'about' && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -1235,11 +1267,11 @@ function App() {
                   </h2>
                   
                   <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <button
                         onClick={() => handleRequestCapability('read')}
                         disabled={!connection || loading === 'capability-read'}
-                        className="px-6 py-2 bg-green-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2"
+                        className="px-4 md:px-6 py-2 bg-green-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
                       >
                         {loading === 'capability-read' ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1252,7 +1284,7 @@ function App() {
                       <button
                         onClick={() => handleRequestCapability('write')}
                         disabled={!connection || loading === 'capability-write'}
-                        className="px-6 py-2 bg-orange-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2"
+                        className="px-4 md:px-6 py-2 bg-orange-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
                       >
                         {loading === 'capability-write' ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1265,7 +1297,7 @@ function App() {
                       <button
                         onClick={() => handleRequestCapability('compute')}
                         disabled={!connection || loading === 'capability-compute'}
-                        className="px-6 py-2 bg-purple-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2"
+                        className="px-4 md:px-6 py-2 bg-purple-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
                       >
                         {loading === 'capability-compute' ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
