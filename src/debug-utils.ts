@@ -170,35 +170,15 @@ export function validateBalance(balance: any): boolean {
       value: balance.octAddress
     },
     {
-      name: 'EVM address starts with "0x"',
-      pass: balance.evmAddress?.startsWith('0x'),
-      value: balance.evmAddress
-    },
-    {
-      name: 'Has OCT balance',
+      name: 'Has OCT balance (number)',
       pass: typeof balance.octBalance === 'number',
       value: balance.octBalance
-    },
-    {
-      name: 'Has ETH balance',
-      pass: typeof balance.ethBalance === 'number',
-      value: balance.ethBalance
-    },
-    {
-      name: 'Has USDC balance',
-      pass: typeof balance.usdcBalance === 'number',
-      value: balance.usdcBalance
     },
     {
       name: 'Has network',
       pass: ['testnet', 'mainnet'].includes(balance.network),
       value: balance.network
     },
-    {
-      name: 'Has EVM network',
-      pass: !!balance.evmNetwork,
-      value: balance.evmNetwork
-    }
   ];
   
   let allPassed = true;

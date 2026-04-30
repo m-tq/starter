@@ -53,7 +53,6 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('about'); // Start with About section
   const [balanceResult, setBalanceResult] = useState<string>('');
-  const [signatureResult, setSignatureResult] = useState<string>('');
   const [gasResult, setGasResult] = useState<string>('');
   const [advancedResult, setAdvancedResult] = useState<string>('');
   const [allCapabilities, setAllCapabilities] = useState<Capability[]>([]);
@@ -153,7 +152,7 @@ function App() {
     }
   };
 
-  const handleRequestCapability = async (scope: 'read' | 'write' | 'compute') => {
+  const handleRequestCapability = async (scope: 'read' | 'write') => {
     if (!sdk || !connection) return;
     setLoading(`capability-${scope}`);
     
@@ -162,9 +161,7 @@ function App() {
       
       const methods = scope === 'read' 
         ? ['get_balance'] 
-        : scope === 'write'
-        ? ['send_transaction']
-        : ['invoke_compute'];
+        : ['send_transaction', 'send_evm_transaction'];
       
       logger.info('Requesting methods', methods);
       
@@ -172,7 +169,7 @@ function App() {
         circle: 'octwa_dapp_starter',
         methods,
         scope,
-        encrypted: scope === 'compute',
+        encrypted: false,
         ttlSeconds: 900,
       });
       
@@ -232,7 +229,7 @@ function App() {
         const isValid = validateBalance(balanceData);
         logger.test('Balance validation', isValid);
         
-        setBalanceResult(`Balance: ${balanceData.octBalance} OCT`);
+        setBalanceResult(`Balance: ${balanceData.octBalance} OCT on ${balanceData.network}`);
       }
       
       logger.groupEnd();
@@ -319,107 +316,6 @@ function App() {
     }
   };
 
-  const handleInvokeCompute = async () => {
-    if (!sdk || !connection) return;
-    setLoading('compute');
-    
-    try {
-      logger.group('Method Invocation (invoke_compute)');
-      
-      const computeCap = capabilities.find(c => c.scope === 'compute');
-      if (!computeCap) {
-        logger.error('No compute capability found');
-        toast({
-          title: 'Error',
-          description: 'No compute capability found. Request one first.',
-        });
-        setLoading(null);
-        logger.groupEnd();
-        return;
-      }
-      
-      logger.info('Using capability', computeCap.id);
-      logger.info('Invoking method: invoke_compute');
-      
-      // Example compute payload (HFHE encrypted computation)
-      const computePayload = {
-        circuitId: 'example-circuit',
-        encryptedInput: {
-          scheme: 'HFHE',
-          data: new Uint8Array([1, 2, 3, 4, 5]), // Example encrypted data
-          associatedData: 'metadata',
-        },
-        computeProfile: {
-          gateCount: 1000,
-          vectorSize: 256,
-          depth: 10,
-          expectedBootstrap: 2,
-        },
-        gasLimit: 1000000,
-      };
-      
-      logger.info('Compute payload', computePayload);
-      
-      // Encode payload
-      const payloadBytes = new TextEncoder().encode(JSON.stringify(computePayload));
-      
-      const result = await sdk.invoke({
-        capabilityId: computeCap.id,
-        method: 'invoke_compute',
-        payload: payloadBytes,
-      });
-      
-      logger.success('Compute invoked successfully');
-      logger.info('Result', result);
-      
-      if (result.success && result.data) {
-        const dataBytes = Array.isArray(result.data) 
-          ? new Uint8Array(result.data)
-          : result.data as Uint8Array;
-        
-        const decoder = new TextDecoder();
-        const computeResult = JSON.parse(decoder.decode(dataBytes));
-        
-        logger.info('Compute result', computeResult);
-        
-        toast({
-          title: 'Compute Completed',
-          description: 'HFHE computation executed successfully',
-        });
-      }
-      
-      logger.groupEnd();
-    } catch (err: any) {
-      logger.error('Compute failed', err);
-      validateError(err);
-      toast({
-        title: 'Compute Failed',
-        description: err.message,
-      });
-      logger.groupEnd();
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleSignMessage = async () => {
-    if (!sdk || !connection) return;
-    setLoading('sign');
-    setSignatureResult('');
-    
-    try {
-      const message = 'Hello from Octra dApp!';
-      const signature = await sdk.signMessage(message);
-      setSignatureResult(`Signature: ${signature}`);
-      console.log('Message signed! Full signature:', signature);
-    } catch (err: any) {
-      setSignatureResult(`Error: ${err.message}`);
-      console.error('Signing failed:', err.message);
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const handleEstimateGas = async () => {
     if (!sdk) return;
     setLoading('gas');
@@ -444,8 +340,6 @@ function App() {
       setLoading(null);
     }
   };
-
-  // Advanced Features Handlers
   const handleListCapabilities = async () => {
     if (!sdk) return;
     setLoading('list-caps');
@@ -593,54 +487,6 @@ function App() {
       logger.groupEnd();
     } catch (err: any) {
       logger.error('Estimate encrypted tx failed', err);
-      validateError(err);
-      setAdvancedResult(`Error: ${err.message}`);
-      logger.groupEnd();
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleEstimateComputeCost = async () => {
-    if (!sdk) return;
-    setLoading('estimate-compute');
-    
-    try {
-      logger.group('Estimate Compute Cost');
-      
-      // Example compute profile
-      const computeProfile = {
-        gateCount: 5000,
-        vectorSize: 512,
-        depth: 15,
-        expectedBootstrap: 3,
-      };
-      
-      logger.info('Estimating compute cost', computeProfile);
-      
-      const estimate = await sdk.estimateComputeCost(computeProfile);
-      
-      logger.success('Estimate completed');
-      logger.info('Compute estimate', estimate);
-      
-      setAdvancedResult(
-        `Compute Cost Estimate:\n` +
-        `Gas Units: ${estimate.gasUnits} OU\n` +
-        `Token Cost: ${estimate.tokenCost.toFixed(7)} OCT\n` +
-        `Gate Count: ${computeProfile.gateCount}\n` +
-        `Vector Size: ${computeProfile.vectorSize}\n` +
-        `Depth: ${computeProfile.depth}\n` +
-        `Expected Bootstrap: ${computeProfile.expectedBootstrap}`
-      );
-      
-      toast({
-        title: 'Compute Cost Estimated',
-        description: `${estimate.gasUnits} OU = ${estimate.tokenCost.toFixed(7)} OCT`,
-      });
-      
-      logger.groupEnd();
-    } catch (err: any) {
-      logger.error('Estimate compute cost failed', err);
       validateError(err);
       setAdvancedResult(`Error: ${err.message}`);
       logger.groupEnd();
@@ -864,7 +710,6 @@ function App() {
     { id: 'connection', label: 'Connection', icon: Wallet },
     { id: 'capabilities', label: 'Capabilities', icon: Shield },
     { id: 'invocation', label: 'Invocation', icon: Send },
-    { id: 'signing', label: 'Message Signing', icon: FileText },
     { id: 'gas', label: 'Gas Estimation', icon: Zap },
     { id: 'advanced', label: 'Advanced Features', icon: Zap },
     { id: 'demo', label: 'Feature Demos', icon: RefreshCw },
@@ -1009,7 +854,7 @@ function App() {
                       <p className="text-muted-foreground">
                         OctWa dApp Starter is a comprehensive demonstration of the complete Octra blockchain ecosystem integration. 
                         This project showcases how decentralized applications (dApps) interact with the Octra blockchain through 
-                        the OctWa Wallet Extension using the Octra Web Wallet SDK (v2.0.0).
+                        the OctWa Wallet Extension using the Octra Web Wallet SDK (v1.2.0).
                       </p>
                     </div>
                     
@@ -1099,16 +944,13 @@ function App() {
                             <li>• <span className="font-mono text-xs">OctraSDK.init()</span> - SDK initialization and wallet detection</li>
                             <li>• <span className="font-mono text-xs">connect()</span> - Connection management with Circle</li>
                             <li>• <span className="font-mono text-xs">disconnect()</span> - Disconnect from wallet</li>
-                            <li>• <span className="font-mono text-xs">requestCapability()</span> - Request read/write/compute capabilities</li>
+                            <li>• <span className="font-mono text-xs">requestCapability()</span> - Request read/write capabilities</li>
                             <li>• <span className="font-mono text-xs">renewCapability()</span> - Extend capability expiration</li>
                             <li>• <span className="font-mono text-xs">revokeCapability()</span> - Revoke capability programmatically</li>
                             <li>• <span className="font-mono text-xs">listCapabilities()</span> - List all active capabilities</li>
-                            <li>• <span className="font-mono text-xs">invoke()</span> - Method invocation (get_balance, send_transaction, invoke_compute)</li>
-                            <li>• <span className="font-mono text-xs">invokeCompute()</span> - HFHE computation with realistic circuits</li>
-                            <li>• <span className="font-mono text-xs">signMessage()</span> - Arbitrary message signing</li>
+                            <li>• <span className="font-mono text-xs">invoke()</span> - Method invocation (get_balance, send_transaction)</li>
                             <li>• <span className="font-mono text-xs">estimatePlainTx()</span> - Gas estimation for plain transactions</li>
                             <li>• <span className="font-mono text-xs">estimateEncryptedTx()</span> - Gas estimation for encrypted transactions</li>
-                            <li>• <span className="font-mono text-xs">estimateComputeCost()</span> - Cost estimation for HFHE computation</li>
                             <li>• <span className="font-mono text-xs">getSessionState()</span> - Session state management</li>
                             <li>• Response decoding - Full type-safe decoder with validation</li>
                             <li>• HFHE circuits - 5 realistic circuits (Add, Multiply, Compare, Polynomial, Neural Net)</li>
@@ -1117,6 +959,7 @@ function App() {
                             <li>• Canonical serialization - Deterministic transaction building</li>
                             <li>• Domain separation - Signature replay protection</li>
                             <li>• Signing mutex - Race condition prevention</li>
+                            <li>• <span className="font-mono text-xs">signMessage()</span> - Available on <span className="font-mono text-xs">window.octra</span> provider directly</li>
                           </ul>
                         </div>
                         
@@ -1139,10 +982,6 @@ function App() {
                         <div className="flex items-start gap-2">
                           <span className="font-mono text-xs text-orange-600 dark:text-orange-400 mt-0.5">write</span>
                           <span className="text-muted-foreground">State-changing operations (e.g., send_transaction)</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="font-mono text-xs text-purple-600 dark:text-purple-400 mt-0.5">compute</span>
-                          <span className="text-muted-foreground">HFHE computation operations (e.g., invoke_compute)</span>
                         </div>
                       </div>
                     </div>
@@ -1174,7 +1013,7 @@ function App() {
                     <div className="border-t border-dashed border-muted pt-4 space-y-2">
                       <h3 className="text-lg font-semibold">Resources</h3>
                       <ul className="space-y-1 pl-4 text-muted-foreground">
-                        <li>• SDK Version: 1.1.1</li>
+                        <li>• SDK Version: 1.2.0</li>
                         <li>• License: MIT</li>
                         <li>• GitHub: <a href="https://github.com/m-tq/octwa" className="text-primary hover:underline">github.com/octra/octwa</a></li>
                       </ul>
@@ -1295,19 +1134,6 @@ function App() {
                         )}
                         Request Write
                       </button>
-                      
-                      <button
-                        onClick={() => handleRequestCapability('compute')}
-                        disabled={!connection || loading === 'capability-compute'}
-                        className="px-4 md:px-6 py-2 bg-purple-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
-                      >
-                        {loading === 'capability-compute' ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Shield className="w-4 h-4" />
-                        )}
-                        Request Compute
-                      </button>
                     </div>
                     
                     {capabilities.length > 0 && (
@@ -1398,66 +1224,10 @@ function App() {
                       </div>
                     )}
                     
-                    {/* Compute Capability - Invoke Compute */}
-                    {capabilities.find(c => c.scope === 'compute') && (
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-semibold text-purple-600 dark:text-purple-400">Compute Capability</h3>
-                        <button
-                          onClick={handleInvokeCompute}
-                          disabled={loading === 'compute'}
-                          className="px-6 py-2 bg-purple-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2"
-                        >
-                          {loading === 'compute' ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Send className="w-4 h-4" />
-                          )}
-                          Invoke Compute
-                        </button>
-                        <p className="text-xs text-muted-foreground">
-                          Executes HFHE encrypted computation (example circuit)
-                        </p>
-                      </div>
-                    )}
-                    
                     {capabilities.length === 0 && (
                       <p className="text-sm text-muted-foreground">
                         Request capabilities first to invoke methods.
                       </p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {activeSection === 'signing' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
-                >
-                  <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <FileText className="w-6 h-6" />
-                    Message Signing
-                  </h2>
-                  
-                  <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                    <button
-                      onClick={handleSignMessage}
-                      disabled={!connection || loading === 'sign'}
-                      className="px-6 py-2 bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2"
-                    >
-                      {loading === 'sign' ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <FileText className="w-4 h-4" />
-                      )}
-                      Sign Message
-                    </button>
-                    
-                    {signatureResult && (
-                      <div className="p-4 border border-border text-sm">
-                        <p className="font-mono">{signatureResult}</p>
-                      </div>
                     )}
                   </div>
                 </motion.div>
@@ -1578,23 +1348,10 @@ function App() {
                           )}
                           Estimate Encrypted TX
                         </button>
-                        
-                        <button
-                          onClick={handleEstimateComputeCost}
-                          disabled={!sdk || loading === 'estimate-compute'}
-                          className="px-4 py-2 bg-indigo-600 text-white disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center gap-2 text-sm"
-                        >
-                          {loading === 'estimate-compute' ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Zap className="w-4 h-4" />
-                          )}
-                          Estimate Compute Cost
-                        </button>
                       </div>
                       
                       <p className="text-xs text-muted-foreground">
-                        Estimate gas for HFHE encrypted transactions and compute operations.
+                        Estimate gas for HFHE encrypted transactions.
                       </p>
                     </div>
                     

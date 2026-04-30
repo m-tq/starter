@@ -1,9 +1,19 @@
 /**
  * HFHE (Homomorphic Fully Encrypted) Computation Utilities
  * Provides realistic HFHE payload generation and circuit examples
+ *
+ * NOTE: HFHE compute is a future feature — these utilities are for
+ * demonstration and simulation purposes only.
  */
 
-import type { ComputeProfile } from '@octwa/sdk';
+// ComputeProfile defined locally (removed from @octwa/sdk v1.2.0)
+export interface ComputeProfile {
+  gateCount: number;
+  vectorSize: number;
+  depth: number;
+  expectedBootstrap: number;
+  branchAffinity?: string;
+}
 
 export interface HFHECircuit {
   id: string;
