@@ -230,6 +230,10 @@ function App() {
         logger.test('Balance validation', isValid);
         
         setBalanceResult(`Balance: ${balanceData.octBalance} OCT on ${balanceData.network}`);
+      } else if (result.success) {
+        // result.data may be undefined for auto-execute — try decoding anyway
+        const balanceData = ResponseDecoder.decodeBalance(result);
+        setBalanceResult(`Balance: ${balanceData.octBalance} OCT on ${balanceData.network}`);
       }
       
       logger.groupEnd();

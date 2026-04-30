@@ -45,16 +45,24 @@ export interface GasEstimateResponse {
  */
 export class ResponseDecoder {
   /**
-   * Decode raw response data to typed object
+   * Decode raw response data to typed object.
+   *
+   * Handles the layered response structure from Chrome extension messaging:
+   *   InvocationResult.data
+   *     → { success: true, data: Uint8Array | {0:n, 1:n, ...} }  (from background auto-execute)
+   *     → Uint8Array                                               (direct)
+   *     → already-parsed object                                    (fallback)
    */
   static decode<T = unknown>(result: InvocationResult): T {
     if (!result.success) {
       throw new Error(result.error || 'Invocation failed');
     }
 
+    // Unwrap top-level data
     let responseData: unknown = result.data;
-    
-    // Handle nested result structure
+
+    // Handle nested result structure from content.js serialization:
+    // { result: { data: ... } }
     const resultAny = result as unknown as { result?: { data?: unknown } };
     if (!responseData && resultAny.result?.data) {
       responseData = resultAny.result.data;
@@ -64,15 +72,33 @@ export class ResponseDecoder {
       throw new Error('Empty response data');
     }
 
-    // Convert to Uint8Array if needed
+    // Background auto-execute wraps result as { success: true, data: Uint8Array }
+    // Unwrap that inner wrapper if present
+    if (
+      typeof responseData === 'object' &&
+      responseData !== null &&
+      'success' in (responseData as Record<string, unknown>) &&
+      'data' in (responseData as Record<string, unknown>)
+    ) {
+      const wrapper = responseData as { success: boolean; data: unknown };
+      if (wrapper.data !== undefined) {
+        responseData = wrapper.data;
+      }
+    }
+
+    if (!responseData) {
+      throw new Error('Empty response data after unwrap');
+    }
+
+    // Convert to Uint8Array if needed (handles Uint8Array, Array, numeric-keyed object)
     const bytes = this.toUint8Array(responseData);
-    
+
     if (!bytes) {
-      // Already a parsed object
+      // Already a parsed object with named keys
       return responseData as T;
     }
 
-    // Decode and parse JSON
+    // Decode JSON
     const decoded = new TextDecoder().decode(bytes);
     return JSON.parse(decoded) as T;
   }
