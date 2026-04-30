@@ -877,177 +877,250 @@ function App() {
                     <FileText className="w-6 h-6" />
                     About OctWa dApp Starter
                   </h2>
-                  
+
                   <div className="space-y-6 text-sm">
+
+                    {/* Overview */}
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold">Overview</h3>
                       <p className="text-muted-foreground">
-                        OctWa dApp Starter is a comprehensive demonstration of the complete Octra blockchain ecosystem integration. 
-                        This project showcases how decentralized applications (dApps) interact with the Octra blockchain through 
-                        the OctWa Wallet Extension using the Octra Web Wallet SDK (v1.2.0).
+                        OctWa dApp Starter is a reference implementation showing how to integrate a dApp
+                        with the Octra blockchain via the <span className="font-mono text-xs text-foreground">@octwa/sdk</span> v1.2.0
+                        and the OctWa Wallet Extension. All blockchain operations flow through the SDK →
+                        wallet extension → Octra node — the dApp never touches private keys or RPC directly.
                       </p>
                     </div>
                     
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">Ecosystem Architecture</h3>
-                      <div className="p-4 bg-muted/50 rounded space-y-3">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-primary">1. dApp Layer (This Application)</h4>
-                          <p className="text-muted-foreground text-xs">
-                            The user-facing application that provides the interface for blockchain interactions. 
-                            Built with React + TypeScript + Vite, this dApp demonstrates all SDK capabilities including 
-                            connection management, capability requests, method invocations, and HFHE computations.
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-primary">2. SDK Layer (@octwa/sdk)</h4>
-                          <p className="text-muted-foreground text-xs">
-                            The Octra Web Wallet SDK is a stateless, deterministic transaction builder that acts as 
-                            the bridge between dApps and the wallet. It provides type-safe APIs, canonical serialization, 
-                            domain separation for security, and comprehensive error handling. The SDK never handles private 
-                            keys - it only builds and validates transactions.
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-primary">3. Wallet Extension (OctWa)</h4>
-                          <p className="text-muted-foreground text-xs">
-                            The OctWa Wallet Extension is the final authority for all blockchain operations. It securely 
-                            stores private keys, validates all requests from dApps, prompts users for approval, signs 
-                            transactions, and manages connections. The wallet implements capability-based authorization 
-                            to give users fine-grained control over what dApps can do.
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-primary">4. Octra Blockchain</h4>
-                          <p className="text-muted-foreground text-xs">
-                            The underlying blockchain network that executes transactions and HFHE (Homomorphic Fully 
-                            Encrypted) computations. Supports both testnet and mainnet environments with features like 
-                            encrypted transactions, compute operations, and cross-chain capabilities.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">Integration Flow</h3>
+                    {/* Communication flow */}
+                    <div className="border-t border-dashed border-muted pt-4 space-y-3">
+                      <h3 className="text-lg font-semibold">Communication Flow</h3>
                       <div className="p-4 bg-muted/50 rounded font-mono text-xs space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="text-muted-foreground mb-1">Every operation follows this path:</div>
+                        <div className="flex flex-wrap items-center gap-1">
                           <span className="text-blue-500">dApp</span>
                           <span className="text-muted-foreground">→</span>
-                          <span className="text-green-500">SDK.connect()</span>
+                          <span className="text-green-500">@octwa/sdk</span>
                           <span className="text-muted-foreground">→</span>
-                          <span className="text-orange-500">Wallet</span>
+                          <span className="text-yellow-500">window.octra</span>
                           <span className="text-muted-foreground">→</span>
-                          <span className="text-purple-500">User Approval</span>
+                          <span className="text-orange-500">content.js</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-red-500">background.js</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-purple-500">Octra Node RPC</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
                           <span className="text-blue-500">dApp</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-green-500">SDK.requestCapability()</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-orange-500">Wallet</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-purple-500">Grant Permission</span>
+                          <span className="text-muted-foreground">←</span>
+                          <span className="text-green-500">@octwa/sdk</span>
+                          <span className="text-muted-foreground">←</span>
+                          <span className="text-yellow-500">window.octra</span>
+                          <span className="text-muted-foreground">←</span>
+                          <span className="text-orange-500">content.js</span>
+                          <span className="text-muted-foreground">←</span>
+                          <span className="text-red-500">background.js</span>
+                          <span className="text-muted-foreground">←</span>
+                          <span className="text-purple-500">Octra Node RPC</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-500">dApp</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-green-500">SDK.invoke()</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-orange-500">Wallet Signs</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-purple-500">Blockchain Executes</span>
+                        <div className="text-muted-foreground mt-2 text-[10px]">
+                          Private keys live exclusively in background.js — never exposed to dApp or SDK.
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">SDK Features & Implementation Status</h3>
-                      
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-green-600 dark:text-green-400">[IMPLEMENTED] Fully Implemented in Sample</h4>
-                          <ul className="space-y-1 pl-4 text-muted-foreground">
-                            <li>• <span className="font-mono text-xs">OctraSDK.init()</span> - SDK initialization and wallet detection</li>
-                            <li>• <span className="font-mono text-xs">connect()</span> - Connection management with Circle</li>
-                            <li>• <span className="font-mono text-xs">disconnect()</span> - Disconnect from wallet</li>
-                            <li>• <span className="font-mono text-xs">requestCapability()</span> - Request read/write capabilities</li>
-                            <li>• <span className="font-mono text-xs">renewCapability()</span> - Extend capability expiration</li>
-                            <li>• <span className="font-mono text-xs">revokeCapability()</span> - Revoke capability programmatically</li>
-                            <li>• <span className="font-mono text-xs">listCapabilities()</span> - List all active capabilities</li>
-                            <li>• <span className="font-mono text-xs">invoke()</span> - Method invocation (get_balance, send_transaction)</li>
-                            <li>• <span className="font-mono text-xs">estimatePlainTx()</span> - Gas estimation for plain transactions</li>
-                            <li>• <span className="font-mono text-xs">estimateEncryptedTx()</span> - Gas estimation for encrypted transactions</li>
-                            <li>• <span className="font-mono text-xs">getSessionState()</span> - Session state management</li>
-                            <li>• Response decoding - Full type-safe decoder with validation</li>
-                            <li>• HFHE circuits - 5 realistic circuits (Add, Multiply, Compare, Polynomial, Neural Net)</li>
-                            <li>• Advanced error handling - Retry with backoff, circuit breaker, timeout patterns</li>
-                            <li>• Event system - Connection and capability events</li>
-                            <li>• Canonical serialization - Deterministic transaction building</li>
-                            <li>• Domain separation - Signature replay protection</li>
-                            <li>• Signing mutex - Race condition prevention</li>
-                            <li>• <span className="font-mono text-xs">signMessage()</span> - Available on <span className="font-mono text-xs">window.octra</span> provider directly</li>
-                          </ul>
+
+                    {/* SDK API */}
+                    <div className="border-t border-dashed border-muted pt-4 space-y-3">
+                      <h3 className="text-lg font-semibold">@octwa/sdk v1.2.0 — Full API</h3>
+
+                      {/* OctraSDK class */}
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wide">OctraSDK class</h4>
+                        <div className="grid grid-cols-1 gap-1">
+                          {[
+                            ['OctraSDK.init(options?)', 'Detect wallet extension, returns SDK instance'],
+                            ['isInstalled()', 'Check if OctWa extension is present in window.octra'],
+                            ['connect(request)', 'Open connection popup → returns Connection (walletPubKey, evmAddress, epoch, branchId)'],
+                            ['disconnect()', 'Clear session, capabilities, and nonces'],
+                            ['requestCapability(request)', 'Request scoped permission token (read | write | compute)'],
+                            ['renewCapability(id)', 'Extend capability expiration by 15 min'],
+                            ['revokeCapability(id)', 'Immediately revoke a capability'],
+                            ['listCapabilities()', 'List all active capabilities for this origin'],
+                            ['invoke(request)', 'Build SignedInvocation and send to wallet — auto-execute for read, popup for write'],
+                            ['estimatePlainTx(payload)', 'Live fee from node: octra_recommendedFee("standard")'],
+                            ['estimateEncryptedTx(payload)', 'Live fee from node: octra_recommendedFee("encrypt")'],
+                            ['getSessionState()', 'Current connection, capabilities, epoch, branchId'],
+                            ['on(event, cb) / off(event, cb)', 'Subscribe to: connect, disconnect, capabilityGranted, branchChanged, epochChanged, extensionReady'],
+                          ].map(([name, desc]) => (
+                            <div key={name} className="flex gap-2 text-xs">
+                              <span className="font-mono text-primary shrink-0 w-64">{name}</span>
+                              <span className="text-muted-foreground">{desc}</span>
+                            </div>
+                          ))}
                         </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-gray-500 dark:text-gray-600">[DISABLED] Disabled Features</h4>
-                          <ul className="space-y-1 pl-4 text-muted-foreground">
-                            <li>• Intent-based swaps - Cross-chain swap support (feature under development, currently disabled in SDK)</li>
-                          </ul>
+                      </div>
+
+                      {/* Canonical */}
+                      <div className="space-y-1 mt-3">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wide">Canonical serialization (canonical.ts)</h4>
+                        <div className="grid grid-cols-1 gap-1">
+                          {[
+                            ['canonicalize(obj)', 'Deterministic JSON — keys sorted, no whitespace'],
+                            ['canonicalizeCapability(payload)', 'Canonical form for capability signing'],
+                            ['canonicalizeInvocation(inv)', 'Canonical form for invocation signing'],
+                            ['hashCapabilityWithDomain(payload)', 'SHA-256(OCTRA_CAPABILITY_PREFIX + canonical) — async'],
+                            ['hashInvocationWithDomain(inv)', 'SHA-256(OCTRA_INVOCATION_PREFIX + canonical) — async'],
+                            ['hashPayload(payload)', 'Fingerprint for Uint8Array / EncryptedPayload'],
+                            ['sha256Bytes(data)', 'Real SHA-256 via crypto.subtle — async'],
+                            ['sha256String(str)', 'SHA-256 of UTF-8 string — async'],
+                            ['bytesToHex(bytes)', 'Uint8Array → lowercase hex string'],
+                            ['OCTRA_CAPABILITY_PREFIX', '"OctraCapability:v2:" — domain separation constant'],
+                            ['OCTRA_INVOCATION_PREFIX', '"OctraInvocation:v2:" — domain separation constant'],
+                          ].map(([name, desc]) => (
+                            <div key={name} className="flex gap-2 text-xs">
+                              <span className="font-mono text-primary shrink-0 w-64">{name}</span>
+                              <span className="text-muted-foreground">{desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Crypto */}
+                      <div className="space-y-1 mt-3">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wide">Cryptographic utilities (crypto.ts)</h4>
+                        <div className="grid grid-cols-1 gap-1">
+                          {[
+                            ['verifyEd25519Signature(sig, msg, pubkey)', 'Ed25519 verify via Web Crypto API (tweetnacl fallback)'],
+                            ['verifyCapabilitySignature(capability)', 'Full capability signature verification'],
+                            ['validateCapability(cap, origin?)', 'Expiry + origin + signature check'],
+                            ['isCapabilityExpired(cap)', 'Check expiresAt < Date.now()'],
+                            ['isOriginValid(cap, origin)', 'Check appOrigin binding'],
+                            ['generateNonce()', 'CSPRNG UUID-format nonce'],
+                            ['hexToBytes(hex)', 'Hex string → Uint8Array'],
+                            ['sha256(data)', 'SHA-256 Uint8Array → Uint8Array'],
+                            ['domainSeparator(params)', 'Origin binding hash for invocations'],
+                            ['deriveSessionKey(secret, circle, origin, epoch)', 'HKDF-SHA-256 session key derivation'],
+                          ].map(([name, desc]) => (
+                            <div key={name} className="flex gap-2 text-xs">
+                              <span className="font-mono text-primary shrink-0 w-64">{name}</span>
+                              <span className="text-muted-foreground">{desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Response utils */}
+                      <div className="space-y-1 mt-3">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wide">Response decoding (response-utils.ts)</h4>
+                        <div className="grid grid-cols-1 gap-1">
+                          {[
+                            ['decodeResponseData<T>(result)', 'Unwrap nested {success,data} wrapper + Uint8Array → JSON'],
+                            ['decodeBalanceResponse(result)', 'Typed decode → { octAddress, octBalance, network }'],
+                          ].map(([name, desc]) => (
+                            <div key={name} className="flex gap-2 text-xs">
+                              <span className="font-mono text-primary shrink-0 w-64">{name}</span>
+                              <span className="text-muted-foreground">{desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Error classes */}
+                      <div className="space-y-1 mt-3">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wide">Error classes (errors.ts)</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {['NotInstalledError','NotConnectedError','UserRejectedError','TimeoutError',
+                            'ValidationError','CapabilityError','ScopeViolationError','SignatureInvalidError',
+                            'CapabilityExpiredError','CapabilityRevokedError','OriginMismatchError',
+                            'BranchMismatchError','EpochMismatchError','NonceViolationError','DomainSeparationError'
+                          ].map(e => (
+                            <span key={e} className="font-mono text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">{e}</span>
+                          ))}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">Capability Scopes</h3>
+
+                    {/* Invoke methods */}
+                    <div className="border-t border-dashed border-muted pt-4 space-y-3">
+                      <h3 className="text-lg font-semibold">Supported invoke() Methods</h3>
                       <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <span className="font-mono text-xs text-green-600 dark:text-green-400 mt-0.5">read</span>
-                          <span className="text-muted-foreground">Read-only operations (e.g., get_balance)</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="font-mono text-xs text-orange-600 dark:text-orange-400 mt-0.5">write</span>
-                          <span className="text-muted-foreground">State-changing operations (e.g., send_transaction)</span>
-                        </div>
+                        {[
+                          { method: 'get_balance', scope: 'read', auto: true, desc: 'Fetch OCT balance from node — no popup, returns { octAddress, octBalance, network }' },
+                          { method: 'send_transaction', scope: 'write', auto: false, desc: 'Send OCT transfer or contract call (op_type: standard | call, encrypted_data for contract method)' },
+                          { method: 'send_evm_transaction', scope: 'write', auto: false, desc: 'Send ETH/EVM transaction — wallet signs with derived secp256k1 key' },
+                          { method: 'send_erc20_transaction', scope: 'write', auto: false, desc: 'Send ERC-20 token transfer (tokenContract, to, amount, decimals, symbol)' },
+                        ].map(({ method, scope, auto, desc }) => (
+                          <div key={method} className="flex gap-3 text-xs p-2 bg-muted/30 rounded">
+                            <span className="font-mono text-primary shrink-0 w-44">{method}</span>
+                            <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${scope === 'read' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-orange-500/20 text-orange-600 dark:text-orange-400'}`}>{scope}</span>
+                            <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] ${auto ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'}`}>{auto ? 'auto' : 'popup'}</span>
+                            <span className="text-muted-foreground">{desc}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">Security Features</h3>
-                      <ul className="space-y-1 pl-4 text-muted-foreground">
-                        <li>• <strong>Canonical Serialization</strong> - Deterministic transaction building with sorted keys</li>
-                        <li>• <strong>Domain Separation</strong> - Prevents signature replay attacks across different contexts</li>
-                        <li>• <strong>Signing Mutex</strong> - Automatic protection against race conditions and double-send</li>
-                        <li>• <strong>Nonce Management</strong> - SDK provides nonces for ordering, wallet validates</li>
-                        <li>• <strong>Capability-Based Auth</strong> - Fine-grained permission model with time-bound access</li>
-                        <li>• <strong>HFHE Encryption</strong> - Encrypted payloads treated as opaque blobs</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="border-t border-dashed border-muted pt-4 space-y-4">
-                      <h3 className="text-lg font-semibold">Architecture</h3>
-                      <div className="p-4 bg-muted/50 rounded font-mono text-xs space-y-1">
-                        <div>DApp (UI) → SDK (Transaction Builder) → Wallet (Signing) → Network (Execution)</div>
-                        <div className="text-muted-foreground mt-2">
-                          • SDK: Stateless, deterministic (NO private keys)<br />
-                          • Wallet: Final authority for signing and validation<br />
-                          • Network: Transaction execution with HFHE support
-                        </div>
+
+                    {/* Security */}
+                    <div className="border-t border-dashed border-muted pt-4 space-y-3">
+                      <h3 className="text-lg font-semibold">Security Architecture</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        {[
+                          ['Real SHA-256', 'crypto.subtle.digest — no djb2 or custom hash for security ops'],
+                          ['Domain separation', 'OctraCapability:v2: / OctraInvocation:v2: prefixes prevent cross-context replay'],
+                          ['Signing mutex', 'Serializes concurrent invoke() calls — prevents nonce races and double-send'],
+                          ['Nonce monotonicity', 'SDK tracks nonces locally; wallet is final authority and rejects violations'],
+                          ['Origin binding', 'Capabilities cryptographically bound to appOrigin — cannot be used cross-origin'],
+                          ['Keyed pending registry', 'Each popup request keyed by unique pendingKey — no single-slot race conditions'],
+                          ['Content script whitelist', 'VALID_MESSAGE_TYPES + requestId length guard — drops unknown messages'],
+                          ['EIP-6963 analog', 'octra:announceProvider CustomEvent — multiple wallets can coexist'],
+                          ['Private key isolation', 'Keys live only in background.js service worker — never in SDK or dApp'],
+                          ['HFHE payload opacity', 'Encrypted payloads hashed but never inspected by SDK'],
+                        ].map(([title, desc]) => (
+                          <div key={title} className="p-2 bg-muted/30 rounded space-y-0.5">
+                            <div className="font-semibold text-foreground">{title}</div>
+                            <div className="text-muted-foreground text-[11px]">{desc}</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    
+
+                    {/* What this sample demonstrates */}
+                    <div className="border-t border-dashed border-muted pt-4 space-y-3">
+                      <h3 className="text-lg font-semibold">What This Sample Demonstrates</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground">
+                        {[
+                          '✅ SDK init + wallet detection (octraLoaded + octra:announceProvider)',
+                          '✅ connect() → Connection with epoch, branchId, evmAddress',
+                          '✅ requestCapability() — read scope (get_balance)',
+                          '✅ requestCapability() — write scope (send_transaction, send_evm_transaction)',
+                          '✅ invoke(get_balance) — auto-execute, OCT-only balance response',
+                          '✅ invoke(send_transaction) — popup approval, standard + contract call',
+                          '✅ listCapabilities() / renewCapability() / revokeCapability()',
+                          '✅ estimatePlainTx() — live octra_recommendedFee("standard") from node',
+                          '✅ estimateEncryptedTx() — live octra_recommendedFee("encrypt") from node',
+                          '✅ decodeResponseData() — unwrap nested {success,data} + Uint8Array → JSON',
+                          '✅ Error handling — retry backoff, circuit breaker, timeout pattern',
+                          '✅ HFHE circuit simulation — 5 circuits (Add, Multiply, Compare, Poly, NN)',
+                          '✅ Event listeners — connect, disconnect, capabilityGranted',
+                          '✅ getSessionState() — connected, circle, epoch, activeCapabilities',
+                          '⚠️ signMessage() — on window.octra provider directly, not on SDK',
+                          '🚫 Intent-based swaps — disabled in SDK (under development)',
+                        ].map(item => (
+                          <div key={item} className="text-[11px]">{item}</div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Resources */}
                     <div className="border-t border-dashed border-muted pt-4 space-y-2">
                       <h3 className="text-lg font-semibold">Resources</h3>
-                      <ul className="space-y-1 pl-4 text-muted-foreground">
-                        <li>• SDK Version: 1.2.0</li>
-                        <li>• License: MIT</li>
-                        <li>• GitHub: <a href="https://github.com/m-tq/octwa" className="text-primary hover:underline">github.com/octra/octwa</a></li>
-                      </ul>
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span>SDK: <span className="font-mono text-foreground">@octwa/sdk@1.2.0</span></span>
+                        <span>Extension: <span className="font-mono text-foreground">OctWa v1.3.2</span></span>
+                        <span>License: <span className="font-mono text-foreground">MIT</span></span>
+                        <a href="https://github.com/m-tq/OctWa" className="text-primary hover:underline">github.com/m-tq/OctWa</a>
+                      </div>
                     </div>
+
                   </div>
                 </motion.div>
               )}
