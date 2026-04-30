@@ -326,20 +326,46 @@ function App() {
     setGasResult('');
     
     try {
-      // Test with different amounts to show OU calculation
-      const smallTx = await sdk.estimatePlainTx({ to: 'oct...', amount: 100 });
-      const largeTx = await sdk.estimatePlainTx({ to: 'oct...', amount: 1500 });
-      
+      logger.group('Gas Estimation (live from node via octra_recommendedFee)');
+
+      // Fetch live fee estimates for each op_type from the node.
+      // sdk.estimatePlainTx   → background queries octra_recommendedFee('standard')
+      // sdk.estimateEncryptedTx → background queries octra_recommendedFee('encrypt')
+      const [standard, encrypted] = await Promise.all([
+        sdk.estimatePlainTx({}),
+        sdk.estimateEncryptedTx({
+          scheme: 'HFHE',
+          data: new Uint8Array(8),
+          associatedData: 'sample',
+        }),
+      ]);
+
+      logger.success('Fee estimates fetched');
+      logger.info('standard', standard);
+      logger.info('encrypt', encrypted);
+
+      const fmt = (ou: number) =>
+        `${ou.toLocaleString()} OU  =  ${(ou / 1_000_000).toFixed(7)} OCT`;
+
       setGasResult(
-        `Small TX (100 OCT): ${smallTx.gasUnits} OU = ${smallTx.tokenCost.toFixed(7)} OCT fee\n` +
-        `Large TX (1500 OCT): ${largeTx.gasUnits} OU = ${largeTx.tokenCost.toFixed(7)} OCT fee\n` +
-        `Formula: OU × 0.0000001 = Fee in OCT`
+        `Live fee estimates from Octra node (octra_recommendedFee)\n` +
+        `${'─'.repeat(52)}\n\n` +
+        `op_type: standard  (plain transfer)\n` +
+        `  Recommended : ${fmt(standard.gasUnits)}\n` +
+        `  Latency est : ~${standard.latencyEstimate / 1000}s\n` +
+        `  Epoch       : ${standard.epoch}\n\n` +
+        `op_type: encrypt  (HFHE encrypted tx)\n` +
+        `  Recommended : ${fmt(encrypted.gasUnits)}\n` +
+        `  Latency est : ~${encrypted.latencyEstimate / 1000}s\n` +
+        `  Epoch       : ${encrypted.epoch}\n\n` +
+        `Formula: OU ÷ 1,000,000 = fee in OCT`
       );
-      
-      console.log('Gas estimates:', { smallTx, largeTx });
+
+      logger.groupEnd();
     } catch (err: any) {
       setGasResult(`Error: ${err.message}`);
-      console.error('Gas estimation failed:', err.message);
+      logger.error('Gas estimation failed', err);
+      logger.groupEnd();
     } finally {
       setLoading(null);
     }
