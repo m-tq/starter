@@ -33,12 +33,12 @@ import { HFHE_CIRCUITS, createComputeRequest, simulateComputeResult, estimateCir
 // Logo component matching favicon
 const Logo = ({ size = 24 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" width={size} height={size}>
-    <circle cx="32" cy="32" r="30" fill="#3A4DFF"/>
+    <circle cx="32" cy="32" r="30" fill="#3B567F"/>
     <path d="M16 22C16 20.3431 17.3431 19 19 19H45C46.6569 19 48 20.3431 48 22V24H16V22Z" fill="white" opacity="0.9"/>
     <rect x="16" y="24" width="32" height="20" rx="2" fill="white"/>
-    <rect x="20" y="28" width="24" height="3" rx="1.5" fill="#3A4DFF" opacity="0.3"/>
-    <rect x="20" y="33" width="16" height="3" rx="1.5" fill="#3A4DFF" opacity="0.3"/>
-    <circle cx="40" cy="38" r="3.5" fill="#3A4DFF"/>
+    <rect x="20" y="28" width="24" height="3" rx="1.5" fill="#3B567F" opacity="0.3"/>
+    <rect x="20" y="33" width="16" height="3" rx="1.5" fill="#3B567F" opacity="0.3"/>
+    <circle cx="40" cy="38" r="3.5" fill="#3B567F"/>
     <circle cx="40" cy="38" r="1.5" fill="white"/>
   </svg>
 );
@@ -754,7 +754,7 @@ function App() {
               <div className="w-5 h-5 md:w-6 md:h-6">
                 <Logo size={24} />
               </div>
-              <h1 className="text-sm md:text-lg font-bold truncate" style={{ color: '#3A4DFF' }}>
+              <h1 className="text-sm md:text-lg font-bold truncate" style={{ color: '#3B567F' }}>
                 <span className="hidden sm:inline">OctWa dApp Starter</span>
                 <span className="sm:hidden">OctWa</span>
               </h1>
