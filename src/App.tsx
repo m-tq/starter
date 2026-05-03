@@ -105,7 +105,7 @@ function App() {
       const octraSDK = await OctraSDK.init({ timeout: 3000 });
       setSdk(octraSDK);
       setIsInstalled(octraSDK.isInstalled());
-      logger.success('SDK v1.3.3 initialized');
+      logger.success('SDK v1.3.4 initialized');
       logger.groupEnd();
       testCanonicalSerialization();
       testDomainSeparation();
@@ -285,7 +285,7 @@ function App() {
       const payloadBytes = new TextEncoder().encode(JSON.stringify({
         to: 'oct8UYokvM1DR2QpEVM7oCLvJLPvJqvvvvvvvvvvvvvvvvvvv',
         amount: 0.001,
-        message: 'Test from OctWa dApp Starter v1.3.3',
+        message: 'Test from OctWa dApp Starter v1.3.4',
       }));
 
       const result = await sdk.invoke({
@@ -485,7 +485,7 @@ function App() {
                 <span className="hidden sm:inline">OctWa dApp Starter</span>
                 <span className="sm:hidden">OctWa</span>
               </h1>
-              <span className="text-[10px] text-muted-foreground hidden sm:inline">v1.3.3</span>
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">v1.3.4</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -594,13 +594,13 @@ function App() {
 
                   <p className="text-xs text-muted-foreground">
                     Reference implementation for integrating a dApp with Octra blockchain via{' '}
-                    <span className="font-mono text-foreground">@octwa/sdk v1.3.3</span> and the OctWa Wallet Extension.
+                    <span className="font-mono text-foreground">@octwa/sdk v1.3.4</span> and the OctWa Wallet Extension.
                     Private keys never leave the extension.
                   </p>
 
                   {/* API table */}
                   <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-[#3B567F] uppercase tracking-wide">SDK Methods (v1.3.3)</h3>
+                    <h3 className="text-xs font-bold text-[#3B567F] uppercase tracking-wide">SDK Methods (v1.3.4)</h3>
                     <div className="space-y-0.5">
                       {[
                         ['init(options?)',                    '—',       '—',      'Detect extension, return SDK instance'],
@@ -640,7 +640,7 @@ function App() {
                   </div>
 
                   <div className="border border-dashed border-border p-3 text-[10px] text-muted-foreground space-y-1">
-                    <p>SDK: <span className="text-foreground font-mono">@octwa/sdk@1.3.3</span></p>
+                    <p>SDK: <span className="text-foreground font-mono">@octwa/sdk@1.3.4</span></p>
                     <p>Networks: <span className="text-foreground">mainnet / devnet</span></p>
                     <p>EVM network: <span className="text-foreground">auto-resolved from wallet settings</span></p>
                     <p>License: <span className="text-foreground">MIT</span></p>
