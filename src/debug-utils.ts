@@ -57,7 +57,7 @@ export function validateConnection(connection: any): boolean {
     },
     {
       name: 'Has network',
-      pass: ['testnet', 'mainnet'].includes(connection.network),
+      pass: ['devnet', 'mainnet'].includes(connection.network),
       value: connection.network
     },
     // PENDING: Epoch and branch validation disabled until implementation is ready
@@ -176,7 +176,7 @@ export function validateBalance(balance: any): boolean {
     },
     {
       name: 'Has network',
-      pass: ['testnet', 'mainnet'].includes(balance.network),
+      pass: ['devnet', 'mainnet'].includes(balance.network),
       value: balance.network
     },
   ];

@@ -9,7 +9,7 @@ import type { InvocationResult } from '@octwa/sdk';
 export interface BalanceResponse {
   octAddress: string;
   octBalance: number;
-  network: 'mainnet' | 'testnet';
+  network: 'mainnet' | 'devnet';
 }
 
 export interface TransactionResponse {
