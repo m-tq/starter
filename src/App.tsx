@@ -543,7 +543,7 @@ function App() {
           )}
 
           {/* ── Sidebar ──────────────────────────────────────────────────── */}
-          <aside className={`fixed left-0 top-12 bottom-0 w-56 border-r border-border bg-background transition-transform overflow-y-auto z-50 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <aside className={`fixed left-0 top-12 bottom-0 w-56 border-r border-border bg-background transition-transform overflow-y-auto z-40 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="absolute -right-7 top-4 px-1.5 py-3 border border-border bg-background hover:opacity-80 transition-opacity text-[10px] hidden md:block"
