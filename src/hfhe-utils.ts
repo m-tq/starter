@@ -6,7 +6,7 @@
  * demonstration and simulation purposes only.
  */
 
-// ComputeProfile defined locally (removed from @octwa/sdk v1.2.0)
+// ComputeProfile defined locally (removed from @octwa/sdk v1.2.0, still absent in v1.6.0)
 export interface ComputeProfile {
   gateCount: number;
   vectorSize: number;

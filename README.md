@@ -1,134 +1,67 @@
 # Octra dApp Starter
 
-Complete dApp starter to test all Octra SDK functions with the OctWa wallet extension.
+Reference dApp that exercises the full `@octwa/sdk` surface against the OctWa Wallet extension. Uses `@octwa/sdk` **v1.6.0**.
 
-## Features
+## What's covered
 
-### ✅ Connection Management
-- Connect to wallet
-- Disconnect from wallet
-- Display connection info (wallet address, network, branch, epoch)
+### Connection
+- `OctraSDK.init()` · `isInstalled()` · `connect()` · `disconnect()` · `getSessionState()`
 
-### ✅ Capability Management
-- Request Read capability (get_balance)
-- Request Write capability (send_transaction)
-- Request Compute capability (invoke_compute)
-- Display active capabilities
+### Capability lifecycle
+- `requestCapability()` for `read` / `write` / `compute` scopes
+- `renewCapability()` · `revokeCapability()` · `listCapabilities()`
 
-### ✅ Method Invocation
-- Invoke get_balance method
-- Test capability-based authorization
+### Balance & identity
+- `getBalance()` — public + encrypted
+- `getEncryptedBalance()` — cipher-only
+- `getDecryptedBalance()` — convenience (`getBalance` + `decryptCipher`) in one call
+- `getCryptoIdentity()` — Ed25519 pubkey, Curve25519 view pubkey, PVAC registration state
 
-### ✅ Message Signing
-- Sign arbitrary messages
-- Display signature
+### Transactions
+- `invoke({ method: 'send_transaction', ... })` — raw OCT
+- `sendContractCall()` — typed contract write
+- `sendEvmTransaction()` / `sendErc20Transaction()` — EVM side
+- `signMessage()` — "Sign in with Octra"
 
-### ✅ Gas Estimation
-- Estimate plain transaction gas
-- Display gas units and token cost
+### Encrypted balance & stealth (HFHE/PVAC)
+- `encryptBalance()` / `decryptBalance()` — public ↔ encrypted
+- `stealthSend()` / `stealthScan()` / `stealthScanFull()` / `stealthClaim()`
+- `computeSharedSecret()` — ECDH with another view pubkey
+- `decryptCipher()` / `encryptValue()` — client-side HFHE primitives
+- `scanOutputs()` — bulk scan with progress callback
+- `keySwitch()` — rotate PVAC key on-chain
 
-## Installation
+### ZK-enabled flows
+- `signForZK()` — wallet-signed commitments for Groth16 circuits
+
+### Chain reads (no popup)
+- `getTransaction()` · `waitForConfirmation()`
+- `getEpoch()` · `getRecommendedFee(opType)`
+- `getContractStorage()` · `callContractView()`
+- `getViewPubkey()` — resolve another address' view pubkey for stealth sending
+- `getEvmTokens()` · `getEvmTokenBalance()`
+
+### Gas
+- `estimatePlainTx()` · `estimateEncryptedTx()`
+
+### Events
+`connect` · `disconnect` · `capabilityGranted` · `capabilityRevoked` · `capabilityExpired` · `branchChanged` · `epochChanged` · `extensionReady` · `balanceChanged` · `encryptedBalanceChanged` · `stealthOutputFound`
+
+## Install
 
 ```bash
-cd Sample
 npm install
 ```
 
-## Development
+The starter depends on `@octwa/sdk@1.6.0` from npm. No linking required.
+
+## Run
 
 ```bash
 npm run dev
 ```
 
-App will run at `http://localhost:3000`
-
-## Testing with Octra Wallet
-
-1. **Install Octra Wallet Extension**
-   - Build extension: `cd ../OctWa && npm run build:extension`
-   - Load extension from `OctWa/dist` folder
-
-2. **Start dApp**
-   ```bash
-   npm run dev
-   ```
-
-3. **Test Flow**
-   - Open `http://localhost:3000`
-   - Click "Connect Wallet" - will open wallet popup
-   - Approve connection in wallet
-   - Request capabilities (Read/Write/Compute)
-   - Test invocation methods
-   - Test message signing
-   - Test gas estimation
-
-## UI/UX Features
-
-Following `BASE_UI_UX.md`:
-
-- ✅ Primary Color: #3A4DFF
-- ✅ Privacy Color: #00E5C0
-- ✅ Full screen, no overflow
-- ✅ Desktop first, responsive
-- ✅ No background/shadow on cards
-- ✅ Thin separator with dashed border
-- ✅ Fixed header & footer
-- ✅ Sidebar menu with toggle
-- ✅ Hover state with glow shadow
-- ✅ Active state with underline
-- ✅ Dark/Light theme toggle
-- ✅ Lucide React icons
-- ✅ Framer Motion transitions
-- ✅ Font: Fira Code monospace
-- ✅ Sharp edges (no rounded)
-
-## SDK Functions Tested
-
-### Connection
-- `OctraSDK.init()` - Initialize SDK
-- `sdk.isInstalled()` - Check wallet installation
-- `sdk.connect()` - Connect to wallet
-- `sdk.disconnect()` - Disconnect from wallet
-
-### Capabilities
-- `sdk.requestCapability()` - Request capability with scope (read/write/compute)
-
-### Invocation
-- `sdk.invoke()` - Invoke method with capability
-
-### Gas Estimation
-- `sdk.estimatePlainTx()` - Estimate plain transaction
-
-### Signing
-- `sdk.signMessage()` - Sign arbitrary message
-
-## Project Structure
-
-```
-Sample/
-├── src/
-│   ├── App.tsx           # Main app component with all SDK tests
-│   ├── main.tsx          # Entry point
-│   ├── index.css         # Global styles with BASE_UI_UX tokens
-│   └── vite-env.d.ts     # Type declarations
-├── index.html            # HTML template
-├── package.json          # Dependencies (SDK path: ../../OctWa/packages/sdk)
-├── vite.config.ts        # Vite config
-├── tailwind.config.js    # Tailwind config with BASE_UI_UX colors
-├── tsconfig.json         # TypeScript config
-├── BASE_UI_UX.md         # UI/UX design guidelines
-└── README.md             # This file
-```
-
-## Dependencies
-
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **Framer Motion** - Animations
-- **Lucide React** - Icons
-- **@octwa/sdk** - Octra Wallet SDK (linked from ../../OctWa/packages/sdk)
+The app serves at `http://localhost:3000`. Load the **OctWa Wallet Extension** separately (see the extension's own README) and unlock it before clicking *Connect Wallet*.
 
 ## Build
 
@@ -136,60 +69,41 @@ Sample/
 npm run build
 ```
 
-Build output will be in `dist/` folder
+Artifacts land in `dist/`.
 
-## Prerequisites
+## UI/UX
 
-1. **SDK must be built first**:
-   ```bash
-   cd ../OctWa/packages/sdk
-   npm run build
-   ```
+Follows the Octrascan visual language baked into `BASE_UI_UX.md`:
 
-2. **Extension must be built and loaded**:
-   ```bash
-   cd ../OctWa
-   npm run build:extension
-   ```
-   Then load `OctWa/dist` as unpacked extension in Chrome/Edge
+- dense, square, scanner-first
+- Fira Code for protocol data (addresses, hashes, amounts)
+- dark default · light theme toggle
+- Framer Motion transitions · Lucide icons
+- primary `#3B567F` / private `#00E5C0`
 
 ## Troubleshooting
 
 **"Wallet Not Found"**
-- Ensure OctWa extension is installed and enabled
-- Refresh the page after installing extension
+- Make sure the OctWa extension is installed and enabled, then refresh.
 
 **"Connection failed"**
-- Check extension is unlocked
-- Verify wallet has accounts
+- Unlock the extension and verify it has at least one account.
 
 **"Cannot find module '@octwa/sdk'"**
-- Build SDK: `cd ../OctWa/packages/sdk && npm run build`
-- Reinstall: `npm install --force`
+- `npm install` again, or pin the version: `npm install @octwa/sdk@1.6.0`.
 
-**TypeScript errors**
-- Ensure vite-env.d.ts exists in src/
-- Run `npm run build` to check
+**Contract call returned 0 amount error**
+- SDK ≥1.6.0 handles `amount=0` correctly for `op_type: 'call'`. Bump any older extension builds.
 
-## Extension Integration
+**Reverted calls look successful**
+- `octra_transaction(hash)` reports `confirmed` even when a contract call reverted. Read `contract_receipt(hash).success` to detect reverts. The SDK's `waitForConfirmation` plus the starter's `ResponseDecoder.decodeTransaction` surface the correct state.
 
-This dApp tests the complete integration with OctWa extension:
+## Source of truth for SDK details
 
-- `extensionFiles/provider.js` - Provider API injected into page
-- `extensionFiles/background.js` - Background service worker handling capabilities
-- `extensionFiles/content.js` - Content script bridge
+- Live docs page: https://m-tq.github.io/OctWa (landing, `/sdk` route)
+- Package on npm: https://www.npmjs.com/package/@octwa/sdk
+- Skill reference in this repo: `.kiro/skills/octwa-sdk/`
 
-All extension files support SDK with:
-- Branch-based nonce management
-- Epoch tracking
-- Capability states (active/expired/revoked)
-- HFHE encrypted compute
-- Domain separation cryptography
+## License
 
-## Notes
-
-- Ensure Octra Wallet extension is installed
-- Ensure wallet is unlocked
-- All requests will open wallet popup for approval
-- Read methods can auto-execute without popup (if capability exists)
-- Capabilities expire after TTL (default 900 seconds)
+MIT

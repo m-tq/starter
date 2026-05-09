@@ -105,7 +105,7 @@ function App() {
       const octraSDK = await OctraSDK.init({ timeout: 3000 });
       setSdk(octraSDK);
       setIsInstalled(octraSDK.isInstalled());
-      logger.success('SDK v1.3.4 initialized');
+      logger.success('SDK v1.6.0 initialized');
       logger.groupEnd();
       testCanonicalSerialization();
       testDomainSeparation();
@@ -155,8 +155,43 @@ function App() {
     try {
       logger.group(`Capability Request (${scope})`);
       const methods = scope === 'read'
-        ? ['get_balance', 'get_encrypted_balance', 'stealth_scan', 'get_evm_tokens', 'get_evm_token_balance']
-        : ['send_transaction', 'send_evm_transaction', 'send_erc20_transaction', 'encrypt_balance', 'decrypt_balance', 'stealth_send', 'stealth_claim'];
+        ? [
+            // balance & cipher
+            'get_balance',
+            'get_encrypted_balance',
+            // stealth
+            'stealth_scan',
+            'scan_outputs',
+            // EVM reads
+            'get_evm_tokens',
+            'get_evm_token_balance',
+            // v1.6.0 PVAC auto-execute primitives — required for decrypting the
+            // encrypted-balance cipher client-side. Without decrypt_cipher, the
+            // SDK can only return the raw hfhe_v1|... blob (never the number).
+            'get_crypto_identity',
+            'compute_shared_secret',
+            'decrypt_cipher',
+            'encrypt_value',
+            // v1.6.0 chain-read helpers (auto-execute, no popup)
+            'get_transaction',
+            'get_epoch',
+            'get_recommended_fee',
+            'get_contract_storage',
+            'contract_view',
+            'get_view_pubkey',
+          ]
+        : [
+            'send_transaction',
+            'send_evm_transaction',
+            'send_erc20_transaction',
+            'encrypt_balance',
+            'decrypt_balance',
+            'stealth_send',
+            'stealth_claim',
+            // v1.6.0 write surface
+            'sign_for_zk',
+            'key_switch',
+          ];
 
       const cap = await sdk.requestCapability({
         circle: 'octwa_dapp_starter',
@@ -180,6 +215,11 @@ function App() {
   };
 
   // ── Phase 2: getBalance ───────────────────────────────────────────────────
+  // Background returns octBalance + the raw hfhe_v1|... cipher and ALWAYS sets
+  // encryptedBalance = 0 — decryption requires the popup's PVAC WASM context.
+  // Decryption is a LOCAL operation derived from the wallet seed — it does NOT
+  // require a registered PVAC pubkey on the node. The hasPvacPubkey flag only
+  // matters for receiving (senders need it to target you for encrypt/stealth).
   const handleGetBalance = async () => {
     if (!sdk) return;
     setLoading('balance');
@@ -190,12 +230,29 @@ function App() {
 
       const bal: BalanceResponse = await sdk.getBalance(readCap.id);
       validateBalance(bal);
+
+      let encBalanceOct = bal.encryptedBalance;
+      let decryptNote = '';
+      if (bal.cipher && bal.cipher !== '0' && readCap.methods.includes('decrypt_cipher')) {
+        try {
+          const decrypted = await sdk.decryptCipher(readCap.id, bal.cipher);
+          encBalanceOct = decrypted.valueOct;
+          decryptNote = '(decrypted via PVAC)';
+        } catch (err) {
+          decryptNote = `(decrypt failed: ${err instanceof Error ? err.message : String(err)})`;
+        }
+      } else if (bal.cipher === '0') {
+        decryptNote = '(no encrypted balance yet)';
+      } else if (!readCap.methods.includes('decrypt_cipher')) {
+        decryptNote = '(decrypt_cipher not in scope — re-request read capability)';
+      }
+
       setBalanceResult(
         `OCT Address : ${bal.octAddress}\n` +
         `OCT Balance : ${bal.octBalance} OCT\n` +
-        `Enc Balance : ${bal.encryptedBalance} OCT\n` +
-        `Has PVAC    : ${bal.hasPvacPubkey}\n` +
-        `Cipher      : ${bal.cipher.slice(0, 40)}...\n` +
+        `Enc Balance : ${encBalanceOct} OCT ${decryptNote}\n` +
+        `Has PVAC    : ${bal.hasPvacPubkey} (only matters for receiving)\n` +
+        `Cipher      : ${bal.cipher !== '0' ? bal.cipher.slice(0, 40) + '...' : '(none)'}\n` +
         `Network     : ${bal.network}`
       );
     } catch (err: unknown) {
@@ -206,6 +263,10 @@ function App() {
   };
 
   // ── Phase 4: getEncryptedBalance ──────────────────────────────────────────
+  // Fetches the cipher, then decrypts it locally via PVAC (wallet popup WASM).
+  // Decryption needs only the wallet seed — NOT a registered PVAC pubkey.
+  // Cold starts can take ~30–90 s while WASM boots; the wallet's internal
+  // budget is ~120 s. Open the popup once to warm it up if you hit the limit.
   const handleGetEncryptedBalance = async () => {
     if (!sdk) return;
     setLoading('enc-balance');
@@ -215,13 +276,45 @@ function App() {
       if (!readCap) { setEncBalanceResult('Error: No read capability. Request one first.'); return; }
 
       const info: EncryptedBalanceInfo = await sdk.getEncryptedBalance(readCap.id);
+
+      if (!info.cipher || info.cipher === '0') {
+        setEncBalanceResult(
+          'No encrypted balance yet (cipher is empty).\n' +
+          'Tip: call encryptBalance() to move some OCT into the encrypted balance.'
+        );
+        return;
+      }
+
+      if (!readCap.methods.includes('decrypt_cipher')) {
+        setEncBalanceResult(
+          `Cipher fetched, but decrypt_cipher is not in this capability's method list.\n` +
+          `Re-request the read capability so PVAC decrypt is allowed.\n\n` +
+          `Cipher : ${info.cipher.slice(0, 60)}...`
+        );
+        return;
+      }
+
+      setEncBalanceResult('Decrypting cipher via PVAC (first call can take ~30–90 s)...');
+
+      const decrypted = await sdk.decryptCipher(readCap.id, info.cipher);
+
+      const pvacNote = info.hasPvacPubkey
+        ? 'PVAC pubkey registered on node — others can target you for encrypt/stealth sends.'
+        : 'PVAC pubkey NOT registered on node yet (this only affects receiving, not decrypting).';
+
       setEncBalanceResult(
-        `Encrypted Balance : ${info.encryptedBalance} OCT\n` +
-        `Has PVAC Key      : ${info.hasPvacPubkey}\n` +
-        `Cipher            : ${info.cipher.slice(0, 60)}...`
+        `Encrypted Balance : ${decrypted.valueOct} OCT\n` +
+        `Raw Units         : ${decrypted.valueRaw.toString()}\n` +
+        `Has PVAC on node  : ${info.hasPvacPubkey}\n` +
+        `Cipher            : ${info.cipher.slice(0, 60)}...\n\n` +
+        `Note: ${pvacNote}`
       );
     } catch (err: unknown) {
-      setEncBalanceResult(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      const hint = /timed out|timeout/i.test(msg)
+        ? '\n\nHint: PVAC WASM cold start can exceed the wallet\'s 120 s budget.\nOpen the OctWa popup once to warm it up, then retry.'
+        : '';
+      setEncBalanceResult(`Error: ${msg}${hint}`);
     } finally {
       setLoading(null);
     }
@@ -285,7 +378,7 @@ function App() {
       const payloadBytes = new TextEncoder().encode(JSON.stringify({
         to: 'oct8UYokvM1DR2QpEVM7oCLvJLPvJqvvvvvvvvvvvvvvvvvvv',
         amount: 0.001,
-        message: 'Test from OctWa dApp Starter v1.3.4',
+        message: 'Test from OctWa dApp Starter v1.6.0',
       }));
 
       const result = await sdk.invoke({
@@ -485,7 +578,7 @@ function App() {
                 <span className="hidden sm:inline">OctWa dApp Starter</span>
                 <span className="sm:hidden">OctWa</span>
               </h1>
-              <span className="text-[10px] text-muted-foreground hidden sm:inline">v1.3.4</span>
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">v1.6.0</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -594,13 +687,13 @@ function App() {
 
                   <p className="text-xs text-muted-foreground">
                     Reference implementation for integrating a dApp with Octra blockchain via{' '}
-                    <span className="font-mono text-foreground">@octwa/sdk v1.3.4</span> and the OctWa Wallet Extension.
+                    <span className="font-mono text-foreground">@octwa/sdk v1.6.0</span> and the OctWa Wallet Extension.
                     Private keys never leave the extension.
                   </p>
 
                   {/* API table */}
                   <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-[#3B567F] uppercase tracking-wide">SDK Methods (v1.3.4)</h3>
+                    <h3 className="text-xs font-bold text-[#3B567F] uppercase tracking-wide">SDK Methods (v1.6.0)</h3>
                     <div className="space-y-0.5">
                       {[
                         ['init(options?)',                    '—',       '—',      'Detect extension, return SDK instance'],
@@ -640,7 +733,7 @@ function App() {
                   </div>
 
                   <div className="border border-dashed border-border p-3 text-[10px] text-muted-foreground space-y-1">
-                    <p>SDK: <span className="text-foreground font-mono">@octwa/sdk@1.3.4</span></p>
+                    <p>SDK: <span className="text-foreground font-mono">@octwa/sdk@1.6.0</span></p>
                     <p>Networks: <span className="text-foreground">mainnet / devnet</span></p>
                     <p>EVM network: <span className="text-foreground">auto-resolved from wallet settings</span></p>
                     <p>License: <span className="text-foreground">MIT</span></p>

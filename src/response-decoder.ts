@@ -5,7 +5,7 @@
 
 import type { InvocationResult } from '@octwa/sdk';
 
-// Response type definitions — aligned with @octwa/sdk v1.2.0 BalanceResponse
+// Response type definitions — aligned with @octwa/sdk v1.6.0 BalanceResponse
 export interface BalanceResponse {
   octAddress: string;
   octBalance: number;
